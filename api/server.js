@@ -1,6 +1,8 @@
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
+const session = require("express-session");
+const { ConnectSessionKnexStore } = require("connect-session-knex");
 
 const usersRouter = require("./users/users-router.js");
 const authRouter = require("./auth/auth-router.js");
@@ -17,7 +19,31 @@ const authRouter = require("./auth/auth-router.js");
   or you can use a session store like `connect-session-knex`.
  */
 
+const Store = new ConnectSessionKnexStore({
+  knex: require("../data/db-config.js"), // Pass the Knex instance
+  tablename: "sessions",
+  sidfieldname: "sid",
+  createtable: true,
+  clearInterval: 1000 * 60 * 60,
+});
+
 const server = express();
+
+server.use(
+  session({
+    name: "chocolatechip",
+    secret: "it's top secret",
+    cookie: {
+      maxAge: 1000 * 60 * 60,
+      secure: false,
+      httpOnly: false,
+    },
+    resave: false,
+    rolling: true,
+    saveUninitialized: false,
+    store: Store, // Use the instantiated store
+  })
+);
 
 server.use(helmet());
 server.use(express.json());
@@ -39,3 +65,11 @@ server.use((err, req, res, next) => {
 });
 
 module.exports = server;
+
+/*
+  LECTURE QUESTIONS:
+
+    I was trying to use { const Store = require('connect-session-knex')(session) } today, and I kept getting and error telling me that require(...) is not a function, it kept pointing to this same line, what is a way to work aroud this?
+    const session = require('express-session')
+    
+*/
