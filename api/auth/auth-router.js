@@ -6,6 +6,8 @@ const {
   checkUsernameExists,
   checkPasswordLength,
 } = require("./auth-middleware");
+const User = require("../users/users-model");
+const bcrypt = require("bcryptjs");
 
 /**
   1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
@@ -33,8 +35,16 @@ router.post(
   "/register",
   checkUsernameFree,
   checkPasswordLength,
-  (req, res, next) => {
-    res.json("register");
+  async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
+      const hash = await bcrypt.hash(password, 8);
+      User.add({ username, password: hash }).then((user) => {
+        res.status(200).json(user);
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
@@ -53,8 +63,20 @@ router.post(
     "message": "Invalid credentials"
   }
  */
-router.post("/login", checkUsernameExists, (req, res, next) => {
-  res.json("login");
+router.post("/login", checkUsernameExists, async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const [user] = await User.findBy({ username });
+    if (user && bcrypt.compareSync(password, user.password)) {
+      // start sessions
+      req.session.user = user; // VERY IMPORTANT LINE
+      res.json({ message: `welcome, ${user.username}!` });
+    } else {
+      next({ status: 401, message: "Invalid credentials" });
+    }
+  } catch (error) {
+    next();
+  }
 });
 
 /**
