@@ -1,5 +1,5 @@
 const express = require("express");
-
+const User = require("../users/users-model");
 /*
   If the user does not have a session saved in the server
 
@@ -21,9 +21,17 @@ async function restricted(req, res, next) {
     "message": "Username taken"
   }
 */
-function checkUsernameFree(req, res, next) {
-  console.log("checkUsernameFree");
-  next();
+async function checkUsernameFree(req, res, next) {
+  try {
+    const users = await User.findBy({ username: req.body.username });
+    if (!users.length) {
+      next();
+    } else {
+      next({ status: 422, message: "Username taken" });
+    }
+  } catch (error) {
+    next(error);
+  }
 }
 
 /*
@@ -34,9 +42,17 @@ function checkUsernameFree(req, res, next) {
     "message": "Invalid credentials"
   }
 */
-function checkUsernameExists(req, res, next) {
-  console.log("checkUsernameExists");
-  next();
+async function checkUsernameExists(req, res, next) {
+  try {
+    const users = await User.findBy({ username: req.body.username });
+    if (users.length) {
+      next();
+    } else {
+      next({ status: 401, message: "Invalid credentials" });
+    }
+  } catch (error) {
+    next(error);
+  }
 }
 
 /*
