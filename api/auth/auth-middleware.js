@@ -9,11 +9,8 @@ const express = require("express");
   }
 */
 async function restricted(req, res, next) {
-  if (req.session.user) {
-    next();
-  } else {
-    next({ status: 401, message: "You shall not pass!" });
-  }
+  console.log("restricted");
+  next();
 }
 
 /*
@@ -25,11 +22,8 @@ async function restricted(req, res, next) {
   }
 */
 function checkUsernameFree(req, res, next) {
-  if (req.body.username) {
-    next();
-  } else {
-    next({ status: 422, message: "Username taken" });
-  }
+  console.log("checkUsernameFree");
+  next();
 }
 
 /*
@@ -41,9 +35,8 @@ function checkUsernameFree(req, res, next) {
   }
 */
 function checkUsernameExists(req, res, next) {
-  if (!req.body.username) {
-    next({ status: 422, message: "Username taken" });
-  }
+  console.log("checkUsernameExists");
+  next();
 }
 
 /*
@@ -54,7 +47,10 @@ function checkUsernameExists(req, res, next) {
     "message": "Password must be longer than 3 chars"
   }
 */
-function checkPasswordLength() {}
+function checkPasswordLength(req, res, next) {
+  console.log("checkPasswordLength");
+  next();
+}
 
 // Don't forget to add these to the `exports` object so they can be required in other modules
 
