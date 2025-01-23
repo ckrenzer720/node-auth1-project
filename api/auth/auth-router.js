@@ -69,8 +69,9 @@ router.post("/login", checkUsernameExists, async (req, res, next) => {
     const [user] = await User.findBy({ username });
     if (user && bcrypt.compareSync(password, user.password)) {
       // start sessions
+      // make it so the cookie is set on the client
       req.session.user = user; // VERY IMPORTANT LINE
-      res.json({ message: `welcome, ${user.username}!` });
+      res.json({ message: `Welcome ${user.username}!` });
     } else {
       next({ status: 401, message: "Invalid credentials" });
     }
@@ -94,8 +95,18 @@ router.post("/login", checkUsernameExists, async (req, res, next) => {
     "message": "no session"
   }
  */
-router.get("/logout", (req, res, next) => {
-  res.json("logout");
+router.get("/logout", async (req, res, next) => {
+  if (req.session.user) {
+    req.session.destroy((error) => {
+      if (error) {
+        next(error);
+      } else {
+        res.status(200).json({ message: "logged out" });
+      }
+    });
+  } else {
+    res.json({ message: "no session" });
+  }
 });
 
 // Don't forget to add the router to the `exports` object so it can be required in other modules
